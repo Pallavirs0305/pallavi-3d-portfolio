@@ -138,12 +138,12 @@ function PallaviAvatar() {
     worldPos
       .copy(camera.position)
       .addScaledVector(forward, distance * 0.82)
-      .addScaledVector(up, -visibleHeight * 0.07)
+      .addScaledVector(up, -visibleHeight * 0.28)
 
     spriteRef.current.position.copy(worldPos)
     spriteRef.current.quaternion.copy(camera.quaternion)
 
-    const avatarHeight = visibleHeight * 0.34
+    const avatarHeight = visibleHeight * 0.17
     const avatarWidth = avatarHeight * 0.72
     spriteRef.current.scale.set(avatarWidth, avatarHeight, 1)
   })
