@@ -106,7 +106,11 @@ function Lights() {
 }
 
 // me.glb：模型 + glb 自带相机动画（滚动分 5 段擦除）+ 自动对焦 + 眼睛跟随
-function PallaviAvatar() {
+function PallaviAvatar({
+  focusRef,
+}: {
+  focusRef: MutableRefObject<THREE.Vector3>
+}) {
   const texture = useMemo(() => {
     const loader = new TextureLoader()
     const tex = loader.load(`${import.meta.env.BASE_URL}images/pallavi-avatar-cutout.png`)
@@ -117,22 +121,27 @@ function PallaviAvatar() {
 
   const spriteRef = useRef<THREE.Sprite>(null)
   const camera = useThree((s) => s.camera)
+  const localPosition = useMemo(() => new THREE.Vector3(), [])
 
   useFrame(() => {
     if (!spriteRef.current) return
-    // Keep the 2D cutout camera-facing so the original camera choreography is untouched.
+    // Anchor the avatar to the same world-space focus target used by the original
+    // character so the existing depth-of-field stays correctly focused.
+    localPosition.copy(focusRef.current)
+    spriteRef.current.position.copy(localPosition)
+    spriteRef.current.position.y -= 0.55
     spriteRef.current.quaternion.copy(camera.quaternion)
   })
 
   return (
-    <sprite ref={spriteRef} position={[0, 0.78, 0.05]} scale={[0.62, 0.69, 1]}>
+    <sprite ref={spriteRef} scale={[0.22, 0.33, 1]} renderOrder={10}>
       <spriteMaterial
         map={texture}
         transparent
         alphaTest={0.01}
         depthWrite={false}
-        toneMapped={false}
         depthTest={false}
+        toneMapped={false}
       />
     </sprite>
   )
@@ -534,7 +543,7 @@ function Man2({
       scale={scale}
     >
       <primitive object={model} />
-      <PallaviAvatar />
+      <PallaviAvatar focusRef={focusRef} />
     </group>
   )
 }
