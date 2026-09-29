@@ -125,13 +125,14 @@ function PallaviAvatar() {
   })
 
   return (
-    <sprite ref={spriteRef} position={[0, 0.82, 0.05]} scale={[1.55, 1.72, 1]}>
+    <sprite ref={spriteRef} position={[0, 0.78, 0.05]} scale={[0.62, 0.69, 1]}>
       <spriteMaterial
         map={texture}
         transparent
         alphaTest={0.01}
         depthWrite={false}
         toneMapped={false}
+        depthTest={false}
       />
     </sprite>
   )
