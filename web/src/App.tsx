@@ -107,7 +107,7 @@ export default function App() {
   )
   const fogBlur = useTransform(worksProgress, [0, 1], ['blur(0px)', 'blur(10px)'])
   // 滚动渐暗：离开首屏后压暗 3D 场景，保证履历文字可读
-  const scrimOpacity = useTransform(scrollY, [0, 520], [0, 0.4])
+  const scrimOpacity = useTransform(scrollY, [0, 520], [0, 0.32])
   // 首屏滚动提示随之淡出
   const cueOpacity = useTransform(scrollY, [0, 160], [1, 0])
   // 首屏底部渐变底色：开始滑动后淡出
