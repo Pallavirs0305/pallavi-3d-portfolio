@@ -1,5 +1,6 @@
 import { Suspense, useMemo, useRef, useEffect, type MutableRefObject } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
+import { TextureLoader } from 'three'
 import { useGLTF } from '@react-three/drei'
 import { EffectComposer, Bloom, DepthOfField, SMAA } from '@react-three/postprocessing'
 import * as THREE from 'three'
@@ -105,6 +106,37 @@ function Lights() {
 }
 
 // me.glb：模型 + glb 自带相机动画（滚动分 5 段擦除）+ 自动对焦 + 眼睛跟随
+function PallaviAvatar() {
+  const texture = useMemo(() => {
+    const loader = new TextureLoader()
+    const tex = loader.load(`${import.meta.env.BASE_URL}images/pallavi-avatar-cutout.png`)
+    tex.colorSpace = THREE.SRGBColorSpace
+    tex.needsUpdate = true
+    return tex
+  }, [])
+
+  const spriteRef = useRef<THREE.Sprite>(null)
+  const camera = useThree((s) => s.camera)
+
+  useFrame(() => {
+    if (!spriteRef.current) return
+    // Keep the 2D cutout camera-facing so the original camera choreography is untouched.
+    spriteRef.current.quaternion.copy(camera.quaternion)
+  })
+
+  return (
+    <sprite ref={spriteRef} position={[0, 0.82, 0.05]} scale={[1.55, 1.72, 1]}>
+      <spriteMaterial
+        map={texture}
+        transparent
+        alphaTest={0.01}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </sprite>
+  )
+}
+
 function Man2({
   focusRef,
   frameRef,
@@ -160,6 +192,9 @@ function Man2({
       if (o.isMesh) {
         o.castShadow = true
         o.receiveShadow = true
+        // Keep the original GLB geometry hidden. Its camera + focus anchors
+        // still drive the exact original portfolio choreography.
+        o.visible = false
       }
       if (o.isCamera) glbCam = o
       // 首页锚点：兼容旧名 focus-start 与 intro3d 统一命名 focus-0
@@ -498,6 +533,7 @@ function Man2({
       scale={scale}
     >
       <primitive object={model} />
+      <PallaviAvatar />
     </group>
   )
 }
