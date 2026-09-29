@@ -106,11 +106,7 @@ function Lights() {
 }
 
 // me.glb：模型 + glb 自带相机动画（滚动分 5 段擦除）+ 自动对焦 + 眼睛跟随
-function PallaviAvatar({
-  focusRef,
-}: {
-  focusRef: MutableRefObject<THREE.Vector3>
-}) {
+function PallaviAvatar() {
   const texture = useMemo(() => {
     const loader = new TextureLoader()
     const tex = loader.load(`${import.meta.env.BASE_URL}images/pallavi-avatar-cutout.png`)
@@ -121,20 +117,39 @@ function PallaviAvatar({
 
   const spriteRef = useRef<THREE.Sprite>(null)
   const camera = useThree((s) => s.camera)
-  const localPosition = useMemo(() => new THREE.Vector3(), [])
+  const forward = useMemo(() => new THREE.Vector3(), [])
+  const up = useMemo(() => new THREE.Vector3(), [])
+  const worldPos = useMemo(() => new THREE.Vector3(), [])
+  const look = useMemo(() => new THREE.Vector3(), [])
 
   useFrame(() => {
-    if (!spriteRef.current) return
-    // Anchor the avatar to the same world-space focus target used by the original
-    // character so the existing depth-of-field stays correctly focused.
-    localPosition.copy(focusRef.current)
-    spriteRef.current.position.copy(localPosition)
-    spriteRef.current.position.y -= 0.55
+    if (!spriteRef.current || !camera) return
+
+    // Keep the replacement avatar in the same visual place as the original
+    // character, while leaving the original GLB camera choreography untouched.
+    camera.getWorldDirection(forward)
+    up.set(0, 1, 0).applyQuaternion(camera.quaternion).normalize()
+
+    const distance = THREE.MathUtils.clamp(camera.position.distanceTo(look.set(0, 1.25, 0)), 5.5, 11)
+    const visibleHeight = camera.isPerspectiveCamera
+      ? 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov) * 0.5)
+      : 5
+
+    worldPos
+      .copy(camera.position)
+      .addScaledVector(forward, distance * 0.82)
+      .addScaledVector(up, -visibleHeight * 0.07)
+
+    spriteRef.current.position.copy(worldPos)
     spriteRef.current.quaternion.copy(camera.quaternion)
+
+    const avatarHeight = visibleHeight * 0.34
+    const avatarWidth = avatarHeight * 0.72
+    spriteRef.current.scale.set(avatarWidth, avatarHeight, 1)
   })
 
   return (
-    <sprite ref={spriteRef} scale={[0.22, 0.33, 1]} renderOrder={10}>
+    <sprite ref={spriteRef} renderOrder={10}>
       <spriteMaterial
         map={texture}
         transparent
@@ -543,7 +558,7 @@ function Man2({
       scale={scale}
     >
       <primitive object={model} />
-      <PallaviAvatar focusRef={focusRef} />
+      <PallaviAvatar />
     </group>
   )
 }
